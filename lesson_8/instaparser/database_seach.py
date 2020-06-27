@@ -6,6 +6,8 @@ from pprint import pprint
 
 client = MongoClient('mongodb://127.0.0.1:27017')
 db = client.instagram
-objects = db.instagram.find({'subscriber': 1})          # запрос, который возвращает подписчиков
-objects = db.instagram.find({'subscription': 1})        # запрос, который возвращает подписки
+
+objects = db.instagram.find({'user_name': 'cnc_skill', 'subscriber': 1})          # запрос, который возвращает подписчиков
+objects = db.instagram.find({'user_name': 'cnc_skill', 'subscription': 1})        # запрос, который возвращает подписки
+
 pprint(list(objects))
