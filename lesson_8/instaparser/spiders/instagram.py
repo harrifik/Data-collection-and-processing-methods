@@ -14,9 +14,9 @@ class InstagramSpider(scrapy.Spider):
     allowed_domains = ['instagram.com']
     start_urls = ['https://instagram.com/']
     insta_login = 'harrifik2020'
-    insta_pwd = '#PWD_INSTAGRAM_BROWSER:10:1593267590:AX1QADb1xbXN1WbRrOidH2B/hvZg3i2TBxQF4QxX7SvR//lR0DnTynE0i74mgRtWNvkU8I3V1sJETy7dl74sdOov22w28YQOxynHWmcV6w9+h1WRnTIh2T5fMgVMbZaxm3C7U1gnIwwQdhS08FIVBA=='  #
+    insta_pwd = '#PWD_INSTAGRAM_BROWSER:10:1593267590:AX1QADb1xbXN1WbRasidH2B/hvZg3i2TBxQF4QxX7SvR//lR0DnTynE0i74mgRtWNvkU8I3V1sJETy7dl74saswv22w28YQOxynHWmcV6w9+h1WRnTIh2T5fMgVMbZaxm3C7U1gnIwwQdhS08FIVBA=='  #
     inst_login_link = 'https://www.instagram.com/accounts/login/ajax/'
-    parse_user = 'cnc_skill'  # Пользователь, у которого собираем посты. Можно указать список
+    parse_users = ['cnc_skill', 'proiplana']  # Пользователь, у которого собираем посты. Можно указать список
 
     graphql_url = 'https://www.instagram.com/graphql/query/?'
     posts_hash = 'eddbde960fed6bde675388aac39a3657'  # hash для получения данных по постах с главной страницы
@@ -36,11 +36,12 @@ class InstagramSpider(scrapy.Spider):
     def user_parse(self, response: HtmlResponse):
         j_body = json.loads(response.text)
         if j_body['authenticated']:
-            yield response.follow(
-                f'/{self.parse_user}',
-                callback=self.user_data_parse,
-                cb_kwargs={'username': self.parse_user}
-            )
+            for user in self.parse_users:
+                yield response.follow(
+                    f'/{user}',
+                    callback=self.user_data_parse,
+                    cb_kwargs={'username': user}
+                )
 
     def user_data_parse(self, response: HtmlResponse, username):
         user_id = self.fetch_user_id(response.text, username)
@@ -85,8 +86,9 @@ class InstagramSpider(scrapy.Spider):
         subscribers = j_data.get('data').get('user').get('edge_followed_by').get('edges')
         for subscriber in subscribers:
             item = InstaparserItem(
-                _id=subscriber['node']['id'],
+                subs_id=subscriber['node']['id'],
                 user_id=user_id,
+                user_name=username,
                 subscriber=1,
                 subscription=0,
                 photo=subscriber['node']['profile_pic_url'],
@@ -112,8 +114,9 @@ class InstagramSpider(scrapy.Spider):
         subscriptions = j_data.get('data').get('user').get('edge_follow').get('edges')
         for subscription in subscriptions:
             item = InstaparserItem(
-                _id=subscription['node']['id'],
+                subs_id=subscription['node']['id'],
                 user_id=user_id,
+                user_name=username,
                 subscriber=0,
                 subscription=1,
                 photo=subscription['node']['profile_pic_url'],
